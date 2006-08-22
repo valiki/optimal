@@ -1,0 +1,540 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with jLaTeX2HTML 2002-2-1 (1.70) JA patch-2.0
+patched version by:  Kenshi Muto, Debian Project.
+* modified by:  Shige TAKENO
+LaTeX2HTML 2002-2-1 (1.70),
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Regularization by Model Reparameterization</TITLE>
+<META NAME="description" CONTENT="Regularization by Model Reparameterization">
+<META NAME="keywords" CONTENT="regularization">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="jLaTeX2HTML v2002-2-1 JA patch-2.0">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="regularization.css">
+
+</HEAD>
+
+<BODY >
+
+<P>
+
+<P>
+
+<P>
+
+<P>
+<H1 ALIGN="CENTER">Regularization by Model Reparameterization</H1><DIV>
+
+<P ALIGN="CENTER"><STRONG>William S. Harlan</STRONG></P>
+<P ALIGN="CENTER"><STRONG>August, 1995</STRONG></P>
+</DIV>
+
+<P>
+Geophysical inversion frequently makes use of regularization,
+such as the ``Tikhonov regularization'' 
+used by Kenneth Bube and Bob Langan [<A
+ HREF="regularization.html#SEG-1994-0980">1</A>]
+for their ``continuation approach.''
+I'd like to suggest an adjustment of the objective
+function to allow faster convergence of
+regularization and the continuation approach.
+A damping term that discourages complexity can be
+replaced equivalently by a change of variables to 
+model simplicity directly.
+
+<P>
+For an optimized inversion, an objective function typically
+includes a norm of the difference
+between a data vector <IMG
+ WIDTH="17" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
+ SRC="img1.png"
+ ALT="$\svector{d}$"> and a non-linear transform
+<!-- MATH
+ $\svector{f}( \svector{m})$
+ -->
+<IMG
+ WIDTH="46" HEIGHT="37" ALIGN="MIDDLE" BORDER="0"
+ SRC="img2.png"
+ ALT="$\svector{f}( \svector{m})$"> of a model vector <IMG
+ WIDTH="23" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
+ SRC="img3.png"
+ ALT="$\svector{m}$">.
+The global minimum of this norm is often flat, with
+little sensitivity to large variations in the model.
+
+<P>
+For regularization (more than simple damping), a 
+linear operator <IMG
+ WIDTH="21" HEIGHT="35" ALIGN="MIDDLE" BORDER="0"
+ SRC="img4.png"
+ ALT="$\stensor{D}$"> is chosen
+to remove simplicity and preserve complexity when applied
+to the model vector as <!-- MATH
+ $\stensor{D} \cdot \svector{m}$
+ -->
+<IMG
+ WIDTH="53" HEIGHT="35" ALIGN="MIDDLE" BORDER="0"
+ SRC="img5.png"
+ ALT="$\stensor{D} \cdot \svector{m}$">.  
+Most examples use a roughening operator, such as a derivative, to suppress
+long wavelengths and amplify short wavelengths.
+A regularized objective function adds a norm of
+this roughened model to the norm fitting the data:
+<BR>
+<DIV ALIGN="RIGHT">
+
+<!-- MATH
+ \begin{equation}
+\min_{\svector{\scriptstyle m}} ~~
+J_1 (\svector{m} )=
+\| \svector{d} - \svector{f}(\svector{m}) \|^2 
++ c \| \stensor{D} \cdot \svector{m} \|^2 .
+\end{equation}
+ -->
+<TABLE WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE"><TD ALIGN="CENTER" NOWRAP><A NAME="eq:orig"></A><IMG
+ WIDTH="335" HEIGHT="39" BORDER="0"
+ SRC="img6.png"
+ ALT="\begin{displaymath}
+\min_{\svector{\scriptstyle m}} ~~
+J_1 (\svector{m} )=
+\Vert...
+...m}) \Vert^2
++ c \Vert \stensor{D} \cdot \svector{m} \Vert^2 .
+\end{displaymath}"></TD>
+<TD WIDTH=10 ALIGN="RIGHT">
+(1)</TD></TR>
+</TABLE>
+<BR CLEAR="ALL"></DIV><P></P>
+This particular <IMG
+ WIDTH="18" HEIGHT="19" ALIGN="BOTTOM" BORDER="0"
+ SRC="img7.png"
+ ALT="$l^2$"> objective function is easily motivated
+as a maximum <I>a posteriori</I> estimate of the model given
+the data.  Additive noise is assumed to be Gaussian
+and uncorrelated with zero mean.  The model is assumed to be Gaussian
+and zero mean, with an inverse covariance matrix equal to 
+<BR>
+<DIV ALIGN="RIGHT">
+
+<!-- MATH
+ \begin{equation}
+\stensor{C}_m^{-1} \equiv E(\svector{m} \svector{m}^* )^{-1} 
+= \stensor{D}^* \cdot \stensor{D} .
+\end{equation}
+ -->
+<TABLE WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE"><TD ALIGN="CENTER" NOWRAP><A NAME="eq:cova"></A><IMG
+ WIDTH="232" HEIGHT="33" BORDER="0"
+ SRC="img8.png"
+ ALT="\begin{displaymath}
+\stensor{C}_m^{-1} \equiv E(\svector{m} \svector{m}^* )^{-1}
+= \stensor{D}^* \cdot \stensor{D} .
+\end{displaymath}"></TD>
+<TD WIDTH=10 ALIGN="RIGHT">
+(2)</TD></TR>
+</TABLE>
+<BR CLEAR="ALL"></DIV><P></P>
+Asterisks indicate adjoints.
+The assumption that model samples are correlated is equivalent
+to the encouragement of simplicity.  A constant <IMG
+ WIDTH="13" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
+ SRC="img9.png"
+ ALT="$c$">
+adjusts the ratio of variances assumed for noise and the model.
+
+<P>
+Bube and Langan's continuation approach begins with a large constant
+<IMG
+ WIDTH="13" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
+ SRC="img9.png"
+ ALT="$c$">, minimizes the objective function (<A HREF="#eq:orig">1</A>) for a first model,
+then reduces <IMG
+ WIDTH="13" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
+ SRC="img9.png"
+ ALT="$c$"> repeatedly for a tradeoff between simplicity
+and accuracy in fitting the recorded data.  They find
+the simplest model possible to explain the data adequately,
+without preventing the model from using complexity 
+to fit genuinely significant features of the data.  
+Informative details are added to the model when
+justified by the data, without unnecessary distracting 
+details that are poorly determined from the data.
+
+<P>
+Each minimization of the objective function (<A HREF="#eq:orig">1</A>)
+for a fixed constant <IMG
+ WIDTH="13" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
+ SRC="img9.png"
+ ALT="$c$"> typically uses a descent method such 
+as Gauss-Newton with conjugate gradients.   The properties of the gradient
+are important to the rate of convergence:
+<BR>
+<DIV ALIGN="CENTER"><A NAME="eq:gfir"></A><A NAME="eq:gsec"></A>
+<!-- MATH
+ \begin{eqnarray}
+\svector{\nabla}_{\svector{\scriptstyle m}} J_1 (\svector{m}_0 ) &=& 
+\svector{\nabla} \svector{f} ( \svector{m}_0 )^*
+\cdot [ \svector{d} - \svector{f}( \svector{m}_0 ) ] 
+\\
+&+& c \stensor{D}^* \cdot \stensor{D} \cdot \svector{m}_0 .
+\end{eqnarray}
+ -->
+<TABLE ALIGN="CENTER" CELLPADDING="0" WIDTH="100%">
+<TR VALIGN="MIDDLE"><TD NOWRAP ALIGN="RIGHT"><IMG
+ WIDTH="95" HEIGHT="37" ALIGN="MIDDLE" BORDER="0"
+ SRC="img10.png"
+ ALT="$\displaystyle \svector{\nabla}_{\svector{\scriptstyle m}} J_1 (\svector{m}_0 )$"></TD>
+<TD ALIGN="CENTER" NOWRAP><IMG
+ WIDTH="19" HEIGHT="33" ALIGN="MIDDLE" BORDER="0"
+ SRC="img11.png"
+ ALT="$\textstyle =$"></TD>
+<TD ALIGN="LEFT" NOWRAP><IMG
+ WIDTH="187" HEIGHT="37" ALIGN="MIDDLE" BORDER="0"
+ SRC="img12.png"
+ ALT="$\displaystyle \svector{\nabla} \svector{f} ( \svector{m}_0 )^*
+\cdot [ \svector{d} - \svector{f}( \svector{m}_0 ) ]$"></TD>
+<TD WIDTH=10 ALIGN="RIGHT">
+(3)</TD></TR>
+<TR VALIGN="MIDDLE"><TD NOWRAP ALIGN="RIGHT">&nbsp;</TD>
+<TD ALIGN="CENTER" NOWRAP><IMG
+ WIDTH="19" HEIGHT="33" ALIGN="MIDDLE" BORDER="0"
+ SRC="img13.png"
+ ALT="$\textstyle +$"></TD>
+<TD ALIGN="LEFT" NOWRAP><IMG
+ WIDTH="111" HEIGHT="37" ALIGN="MIDDLE" BORDER="0"
+ SRC="img14.png"
+ ALT="$\displaystyle c \stensor{D}^* \cdot \stensor{D} \cdot \svector{m}_0 .$"></TD>
+<TD WIDTH=10 ALIGN="RIGHT">
+(4)</TD></TR>
+</TABLE></DIV><BR CLEAR="ALL"><P></P>
+The model is perturbed with scaled sums of successive 
+gradients, evaluated for different reference versions <IMG
+ WIDTH="30" HEIGHT="33" ALIGN="MIDDLE" BORDER="0"
+ SRC="img15.png"
+ ALT="$\svector{m}_0$">
+of the model. 
+The first term (<A HREF="#eq:gfir">3</A>) is able to introduce fairly
+arbitrary complexity into the model immediately and at any time, even if
+such complexity will be suppressed at the global
+minimum of objective function (<A HREF="#eq:orig">1</A>).  The second
+term (<A HREF="#eq:gsec">4</A>) must wait until the reference
+model <IMG
+ WIDTH="30" HEIGHT="33" ALIGN="MIDDLE" BORDER="0"
+ SRC="img15.png"
+ ALT="$\svector{m}_0$"> has been revised in later iterations
+to suppress this unnecessary complexity.  Meanwhile, the
+first term (<A HREF="#eq:gfir">3</A>) of later iterations can continue
+to introduce other unnecessary complexity into the model.
+The second term removes complexity in the reference model, 
+not in the current perturbation.
+Convergence is slow.  Slow convergence is 
+a natural consequence of applying perturbations which
+do not have any of the correlations assumed for the model
+samples.  Instead,
+let us introduce the appropriate correlation into all gradient 
+perturbations.
+
+<P>
+Assume a new operator <IMG
+ WIDTH="17" HEIGHT="35" ALIGN="MIDDLE" BORDER="0"
+ SRC="img16.png"
+ ALT="$\stensor{S}$"> as a partial right inverse
+of <IMG
+ WIDTH="21" HEIGHT="35" ALIGN="MIDDLE" BORDER="0"
+ SRC="img4.png"
+ ALT="$\stensor{D}$">, so that the two operators approximate
+an identity: <!-- MATH
+ $\stensor{D} \cdot \stensor{S} \approx \stensor{I}$
+ -->
+<IMG
+ WIDTH="80" HEIGHT="35" ALIGN="MIDDLE" BORDER="0"
+ SRC="img17.png"
+ ALT="$\stensor{D} \cdot \stensor{S} \approx \stensor{I}$">.
+This operator should be designed to preserve simplicity
+and suppress complexity, although without destroying complexity
+entirely.  If <IMG
+ WIDTH="21" HEIGHT="35" ALIGN="MIDDLE" BORDER="0"
+ SRC="img4.png"
+ ALT="$\stensor{D}$"> is a roughening operator like
+differentiation, then <IMG
+ WIDTH="17" HEIGHT="35" ALIGN="MIDDLE" BORDER="0"
+ SRC="img16.png"
+ ALT="$\stensor{S}$"> should be a smoothing
+operator like leaky integration.
+
+<P>
+More directly, define the smoothing operator 
+as a factored form of the assumed covariance.
+(Indeed, such a factorization always exists because 
+the covariance is positive semidefinite.)
+<BR>
+<DIV ALIGN="RIGHT">
+
+<!-- MATH
+ \begin{equation}
+\stensor{C}_m \equiv E(\svector{m} \svector{m}^* )
+= \stensor{S}^* \cdot \stensor{S} .
+\end{equation}
+ -->
+<TABLE WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE"><TD ALIGN="CENTER" NOWRAP><A NAME="eq:covb"></A><IMG
+ WIDTH="200" HEIGHT="33" BORDER="0"
+ SRC="img18.png"
+ ALT="\begin{displaymath}
+\stensor{C}_m \equiv E(\svector{m} \svector{m}^* )
+= \stensor{S}^* \cdot \stensor{S} .
+\end{displaymath}"></TD>
+<TD WIDTH=10 ALIGN="RIGHT">
+(5)</TD></TR>
+</TABLE>
+<BR CLEAR="ALL"></DIV><P></P>
+
+<P>
+Minimization of the original objective function
+(<A HREF="#eq:orig">1</A>) is entirely equivalent to minimizing
+the objective function with a new variable <IMG
+ WIDTH="27" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
+ SRC="img19.png"
+ ALT="$\svector{m}'$">, 
+where <!-- MATH
+ $\svector{m} = \stensor{S} \cdot \svector{m}'$
+ -->
+<IMG
+ WIDTH="96" HEIGHT="37" ALIGN="MIDDLE" BORDER="0"
+ SRC="img20.png"
+ ALT="$\svector{m} = \stensor{S} \cdot \svector{m}'$">:
+<BR>
+<DIV ALIGN="RIGHT">
+
+<!-- MATH
+ \begin{equation}
+\min_{\svector{\scriptstyle m}'} ~~
+J_1 ( \stensor{S} \cdot \svector{m}' )=
+J_2 ( \svector{m}' )=
+\| \svector{d} - \svector{f}(\stensor{S} \cdot \svector{m}') \|^2 
++ c \| \svector{m}' \|^2 .
+\end{equation}
+ -->
+<TABLE WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE"><TD ALIGN="CENTER" NOWRAP><A NAME="eq:revi"></A><IMG
+ WIDTH="449" HEIGHT="41" BORDER="0"
+ SRC="img21.png"
+ ALT="\begin{displaymath}
+\min_{\svector{\scriptstyle m}'} ~~
+J_1 ( \stensor{S} \cdot ...
+... \cdot \svector{m}') \Vert^2
++ c \Vert \svector{m}' \Vert^2 .
+\end{displaymath}"></TD>
+<TD WIDTH=10 ALIGN="RIGHT">
+(6)</TD></TR>
+</TABLE>
+<BR CLEAR="ALL"></DIV><P></P>
+The second term reduces to a simple damping norm,
+demonstrating that the new model <IMG
+ WIDTH="27" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
+ SRC="img19.png"
+ ALT="$\svector{m}'$"> now
+has uncorrelated samples.
+Although we optimize this new model <IMG
+ WIDTH="27" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
+ SRC="img19.png"
+ ALT="$\svector{m}'$">,
+we keep and use the original
+model <!-- MATH
+ $\svector{m} = \stensor{S} \cdot \svector{m}'$
+ -->
+<IMG
+ WIDTH="96" HEIGHT="37" ALIGN="MIDDLE" BORDER="0"
+ SRC="img20.png"
+ ALT="$\svector{m} = \stensor{S} \cdot \svector{m}'$">.
+Continuation can adjust the constant <IMG
+ WIDTH="13" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
+ SRC="img9.png"
+ ALT="$c$"> as before,
+with identical results (assuming complete minimization
+of the objective functions [<A HREF="#eq:orig">1</A>] and [<A HREF="#eq:revi">6</A>]).
+
+<P>
+The revised gradient contains the desired correlation:
+<BR>
+<DIV ALIGN="CENTER"><A NAME="eq:nfir"></A><A NAME="eq:nsec"></A>
+<!-- MATH
+ \begin{eqnarray}
+\svector{\nabla}_{\svector{\scriptstyle m}'} J_2 (\svector{m}'_0 ) &=& 
+\stensor{S}^* \cdot
+\svector{\nabla} \svector{f} 
+( \stensor{S} \cdot \svector{m}'_0 )^*
+\cdot [ \svector{d} - \svector{f}( \stensor{S} \cdot \svector{m}'_0 ) ] 
+\\
+&+& c  \svector{m}'_0
+\end{eqnarray}
+ -->
+<TABLE ALIGN="CENTER" CELLPADDING="0" WIDTH="100%">
+<TR VALIGN="MIDDLE"><TD NOWRAP ALIGN="RIGHT"><IMG
+ WIDTH="99" HEIGHT="39" ALIGN="MIDDLE" BORDER="0"
+ SRC="img22.png"
+ ALT="$\displaystyle \svector{\nabla}_{\svector{\scriptstyle m}'} J_2 (\svector{m}'_0 )$"></TD>
+<TD ALIGN="CENTER" NOWRAP><IMG
+ WIDTH="19" HEIGHT="33" ALIGN="MIDDLE" BORDER="0"
+ SRC="img11.png"
+ ALT="$\textstyle =$"></TD>
+<TD ALIGN="LEFT" NOWRAP><IMG
+ WIDTH="272" HEIGHT="39" ALIGN="MIDDLE" BORDER="0"
+ SRC="img23.png"
+ ALT="$\displaystyle \stensor{S}^* \cdot
+\svector{\nabla} \svector{f}
+( \stensor{S} \c...
+...'_0 )^*
+\cdot [ \svector{d} - \svector{f}( \stensor{S} \cdot \svector{m}'_0 ) ]$"></TD>
+<TD WIDTH=10 ALIGN="RIGHT">
+(7)</TD></TR>
+<TR VALIGN="MIDDLE"><TD NOWRAP ALIGN="RIGHT">&nbsp;</TD>
+<TD ALIGN="CENTER" NOWRAP><IMG
+ WIDTH="19" HEIGHT="33" ALIGN="MIDDLE" BORDER="0"
+ SRC="img13.png"
+ ALT="$\textstyle +$"></TD>
+<TD ALIGN="LEFT" NOWRAP><IMG
+ WIDTH="38" HEIGHT="39" ALIGN="MIDDLE" BORDER="0"
+ SRC="img24.png"
+ ALT="$\displaystyle c \svector{m}'_0$"></TD>
+<TD WIDTH=10 ALIGN="RIGHT">
+(8)</TD></TR>
+</TABLE></DIV><BR CLEAR="ALL"><P></P>
+The last operation appearing in the first term of this
+gradient (<A HREF="#eq:nfir">7</A>) is the adjoint <IMG
+ WIDTH="24" HEIGHT="37" ALIGN="MIDDLE" BORDER="0"
+ SRC="img25.png"
+ ALT="$\stensor{S}^*$">
+of the operator <IMG
+ WIDTH="17" HEIGHT="35" ALIGN="MIDDLE" BORDER="0"
+ SRC="img16.png"
+ ALT="$\stensor{S}$">, both of which are
+simplification operators.
+(Many such operators are self-adjoint.)
+Unlike the first term (<A HREF="#eq:gfir">3</A>) of the original gradient, 
+the revised term (<A HREF="#eq:nfir">7</A>) suppresses complexity
+from each new perturbation direction.
+The original term (<A HREF="#eq:gfir">3</A>) 
+contained arbitrary correlations.  If (<A HREF="#eq:gfir">3</A>) 
+were entirely uncorrelated, then the revised
+term (<A HREF="#eq:nfir">7</A>) would have exactly the desired correlations
+assumed by the covariance (<A HREF="#eq:covb">5</A>).  
+
+<P>
+The two objective functions produce different results when
+optimization is incomplete.
+A descent optimization of the original objective
+function (<A HREF="#eq:orig">1</A>) will begin with complex
+perturbations of the model and slowly converge
+toward an increasingly simple model at the global minimum.
+A descent optimization of the revised objective
+function (<A HREF="#eq:revi">6</A>) will begin with simple
+perturbations of the model and slowly converge
+toward an increasingly complex model at the global minimum.
+The latter strategy is more consistent with the
+overall goal of the continuation approach.
+A more economic implementation can use fewer iterations.
+Insufficient iterations result in an insufficiently complex
+model, not in an insufficiently simplified model.
+
+<P>
+I also prefer to adjust more than a single scale factor
+<IMG
+ WIDTH="13" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
+ SRC="img9.png"
+ ALT="$c$">.  Instead, assume a suite of simplification operators
+<IMG
+ WIDTH="22" HEIGHT="35" ALIGN="MIDDLE" BORDER="0"
+ SRC="img26.png"
+ ALT="$\stensor{S_i}$"> which allow increasing complexity as the
+index <IMG
+ WIDTH="11" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
+ SRC="img27.png"
+ ALT="$i$"> increases.  (Furthermore <!-- MATH
+ $\forall \svector{m}_i'$
+ -->
+<IMG
+ WIDTH="39" HEIGHT="37" ALIGN="MIDDLE" BORDER="0"
+ SRC="img28.png"
+ ALT="$\forall \svector{m}_i'$"> and 
+<!-- MATH
+ $j>i, \strut \exists ~ \svector{m}_j' \ni \stensor{S_j} \cdot \svector{m}_j'
+=  \stensor{S_i} \cdot \svector{m}_i'$
+ -->
+<IMG
+ WIDTH="254" HEIGHT="41" ALIGN="MIDDLE" BORDER="0"
+ SRC="img29.png"
+ ALT="$j&gt;i, \strut \exists ~ \svector{m}_j' \ni \stensor{S_j} \cdot \svector{m}_j'
+= \stensor{S_i} \cdot \svector{m}_i'$">.)
+We then can optimize a suite of possible models, 
+<!-- MATH
+ $\{ \svector{m}_i = \stensor{S_i} \cdot \svector{m}'_i \}$
+ -->
+<IMG
+ WIDTH="126" HEIGHT="37" ALIGN="MIDDLE" BORDER="0"
+ SRC="img30.png"
+ ALT="$\{ \svector{m}_i = \stensor{S_i} \cdot \svector{m}'_i \}$">
+of increasing complexity as <IMG
+ WIDTH="11" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
+ SRC="img27.png"
+ ALT="$i$"> increases.  
+Use each optimized model <IMG
+ WIDTH="28" HEIGHT="33" ALIGN="MIDDLE" BORDER="0"
+ SRC="img31.png"
+ ALT="$\svector{m}_i$"> to initialize the 
+next <!-- MATH
+ $\svector{m}_{i+1}$
+ -->
+<IMG
+ WIDTH="45" HEIGHT="33" ALIGN="MIDDLE" BORDER="0"
+ SRC="img32.png"
+ ALT="$\svector{m}_{i+1}$">. As multigrid
+methods have shown, we can thus improve our overall
+convergence by optimizing the most reliable (smoothest) 
+global features in the model before attempting finer
+detail.
+
+<P>
+Finally, I think it easier to choose a simplification
+operator <IMG
+ WIDTH="17" HEIGHT="35" ALIGN="MIDDLE" BORDER="0"
+ SRC="img16.png"
+ ALT="$\stensor{S}$"> which describes the desirable
+features of the model, rather than an operator <IMG
+ WIDTH="21" HEIGHT="35" ALIGN="MIDDLE" BORDER="0"
+ SRC="img4.png"
+ ALT="$\stensor{D}$">
+which keeps only features thought to be undesirable.
+I see some value in constructing both, however, to
+check the consistency of assumptions.
+
+<P>
+
+<H2><A NAME="SECTION00010000000000000000">
+Bibliography</A>
+</H2><DL COMPACT><DD><P></P><DT><A NAME="SEG-1994-0980">1</A>
+<DD>
+Kenneth&nbsp;P. Bube and Robert&nbsp;T. Langan.
+<BR>A continuation approach to regularization for traveltime tomography.
+<BR>In <EM>64th Ann. Internat. Mtg., Expanded Abstracts</EM>, pages
+  980-983. Soc. Expl. Geophys., 1994.
+</DL>
+
+<P>
+<BR><HR>
+<ADDRESS>
+Bill Harlan
+2006-07-06
+</ADDRESS>
+</BODY>
+</HTML>

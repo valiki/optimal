@@ -1,0 +1,1349 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with jLaTeX2HTML 2002-2-1 (1.70) JA patch-2.0
+patched version by:  Kenshi Muto, Debian Project.
+* modified by:  Shige TAKENO
+LaTeX2HTML 2002-2-1 (1.70),
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>An implementation of generalized inversion</TITLE>
+<META NAME="description" CONTENT="An implementation of generalized inversion">
+<META NAME="keywords" CONTENT="inv">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="jLaTeX2HTML v2002-2-1 JA patch-2.0">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="inv.css">
+
+</HEAD>
+
+<BODY >
+
+<P>
+
+<P>
+
+<P>
+
+<P>
+<H1 ALIGN="CENTER">An implementation of generalized inversion</H1><DIV>
+
+<P ALIGN="CENTER"><STRONG>William S. Harlan</STRONG></P>
+<P ALIGN="CENTER"><I>Landmark Graphics; 1805 Shea Center Drive</I></P>
+<P ALIGN="CENTER"><STRONG>March 2004</STRONG></P>
+<P ALIGN="LEFT"><SMALL>Highlands Ranch, CO 80129, USA</SMALL></P>
+</DIV>
+
+<P>
+
+<H1><A NAME="SECTION00010000000000000000">
+Introduction</A>
+</H1>
+
+<P>
+In my geophysical work, I rely heavily upon a
+generalized inversion algorithm called
+Gauss-Newton optimization.  The Gauss-Newton
+method minimizes objective functions that can
+be iteratively approximated by quadratics.
+This approach is particularly appropriate for
+least-squares inversions of moderately
+non-linear transforms.  The package also
+contains code for conjugate-gradient and
+line-search optimizations.
+
+<P>
+Over two decades I have implemented this
+package four times, in four different
+programming languages.  Every feature of this
+package has been motivated by practical
+application.  This particular Java version is
+only a few years old, but I have already used
+it for a dozen or more distinct inversion
+problems.  I find no preexisting package so
+suitable for typical geophysical inversion
+problems.
+
+<P>
+The abstraction is designed to minimize the
+burden of supporting new models, data, and
+transforms.  Unlike many approaches, we will
+not be required to construct and invert large
+linear matrices.  We only need to be able to
+perform transformations on specific models
+and datasets.  The inversion algorithm need
+not know any of the implementation details of
+those models and transformations.
+
+<P>
+For each new problem, I must implement two
+distinct Java interfaces.  The data and model
+are be encapsulated by two implementations of
+the <TT>Vect</TT> interface.  The simulation
+to be inverted must be encapsulated by
+<TT>Transform</TT> if non-linear, or by
+<TT>LinearTransform</TT> if linear.  Finally,
+the model that best explains a particular
+dataset is inverted by one of the
+<TT>GaussNewtonSolver.solve</TT> methods.
+Any constraints or conditioning can be
+implemented with one of these interfaces.
+
+<P>
+
+<H1><A NAME="SECTION00020000000000000000">
+Model and data as abstract vectors</A>
+</H1>
+
+<P>
+Our optimization algorithm will be defined
+only in terms of general vector spaces and
+operators on vectors.  Our abstractions of
+model and data must first support these
+operations.  Notice that this use of the word
+vector is not limited to one-dimensional
+arrays.  See Luenberger's
+[<A
+ HREF="inv.html#luenbergervec">5</A>] ``Optimization by Vector
+Space Methods.''
+
+<P>
+Let us write a specific dataset as a vector
+<IMG
+ WIDTH="17" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
+ SRC="img1.png"
+ ALT="${\svector d}$"> and a model as a vector <IMG
+ WIDTH="23" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
+ SRC="img2.png"
+ ALT="${\svector m}$">.  Each of
+these vectors belong to a separate vector
+space, with different dimensionality, norms,
+and implementations.  Both must support the
+same vector operations.
+
+<P>
+First, a vector can be scaled by a constant
+and added to another vector, to produce
+another valid vector.  I.e, if <!-- MATH
+ ${\svector m}_1$
+ -->
+<IMG
+ WIDTH="30" HEIGHT="33" ALIGN="MIDDLE" BORDER="0"
+ SRC="img3.png"
+ ALT="${\svector m}_1$"> and
+<!-- MATH
+ ${\svector m}_2$
+ -->
+<IMG
+ WIDTH="30" HEIGHT="33" ALIGN="MIDDLE" BORDER="0"
+ SRC="img4.png"
+ ALT="${\svector m}_2$"> are two separate models, and <IMG
+ WIDTH="17" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
+ SRC="img5.png"
+ ALT="$\alpha$">
+and <IMG
+ WIDTH="16" HEIGHT="35" ALIGN="MIDDLE" BORDER="0"
+ SRC="img6.png"
+ ALT="$\beta$"> are scale factors, then <!-- MATH
+ $\alpha
+{\svector m}_1 + \beta {\svector m}_2$
+ -->
+<IMG
+ WIDTH="102" HEIGHT="35" ALIGN="MIDDLE" BORDER="0"
+ SRC="img7.png"
+ ALT="$\alpha
+{\svector m}_1 + \beta {\svector m}_2$"> is also a model vector.
+This vector scaling and addition must be
+commutative, associative, and distributive.
+Here is the method that must be defined by
+the Java interface for an abstract vector.
+
+<P>
+<PRE> 
+public interface Vect extends VectConst {
+  /** Add a scaled version of another vector to a scaled version of this
+      vector.
+      @param scaleThis Multiply this vector by this scalar before adding.
+      @param scaleOther Multiply other vector by this scalar before adding.
+      @param other The other vector to be multiplied.
+   */
+  public void add(double scaleThis, double scaleOther, VectConst other) ;
+  ...
+}
+</PRE> 
+
+<P>
+We could have defined methods to
+scale and add separately, but this method
+offered the best compromise between
+efficiency and simplicity.  Your
+implementation can optimize special cases
+where a scale factor is 0 or 1.
+
+<P>
+<TT>VectConst</TT> is an interface that
+supports only immutable operations.
+<TT>Vect</TT> extends <TT>VectConst</TT> and
+add methods that modify the state of the
+vector.
+
+<P>
+Next we define an dot product (or inner
+product) for a normed vector space.  In
+vector notation, any two vectors from the
+same space can be dotted to produce a scalar:
+<!-- MATH
+ ${\svector m}_1 \cdot {\svector m}_2$
+ -->
+<IMG
+ WIDTH="69" HEIGHT="33" ALIGN="MIDDLE" BORDER="0"
+ SRC="img8.png"
+ ALT="${\svector m}_1 \cdot {\svector m}_2$">.  This dot product is
+usually a simple Cartesian dot product of all
+internal parameters.  Any non-Cartesian
+distances are separated into a separate
+``inverse covariance'' operator.  The
+magnitude or norm of a vector is given by <!-- MATH
+ $\|
+{\svector m}\|^2 \equiv {\svector m}\cdot {{\stensor C}}_m^{-1}\cdot {\svector m}$
+ -->
+<IMG
+ WIDTH="172" HEIGHT="41" ALIGN="MIDDLE" BORDER="0"
+ SRC="img9.png"
+ ALT="$\Vert
+{\svector m}\Vert^2 \equiv {\svector m}\cdot {{\stensor C}}_m^{-1}\cdot {\svector m}$"> The
+significance of this covariance will be
+clearer once we define an objective function.
+
+<P>
+Here are the appropriate Java operations:
+
+<P>
+<PRE> 
+public interface VectConst extends Cloneable, java.io.Serializable {
+  /** Return the Cartesian dot product of this vector with another
+      vector (not including any inverse covariance).
+      @param other The vector to be dotted.
+      @return The dot product.
+  */
+  public double dot(VectConst other);
+
+  /** This is the dot product of the vector with itself premultiplied 
+      by the inverse covariance.  Equivalently,
+        Vect vect = (Vect) this.clone();
+        vect.multiplyInverseCovariance();
+        return this.dot(vect);
+  */
+  public double magnitude() ;
+  ...
+}
+
+public interface Vect extends VectConst {
+  ...
+  /** Optionally multiply a vector by the inverse covariance matrix.
+      Also called preconditioning.
+      A method that does nothing is equivalent to an identity.
+  */
+  public void multiplyInverseCovariance();
+  ...
+}
+</PRE>
+
+<P>
+Notice that all <TT>VectConst</TT>
+extends <TT>Cloneable</TT> and
+<TT>Serializable</TT>.  Copies will
+frequently be necessary.  The optimization
+will minimize the number of vectors
+instantiated simultaneously, to reduce memory
+requirements, even if it requires repeating
+some less expensive operations.
+
+<P>
+The <TT>VectConst.magnitude()</TT> method is
+redundant, but it is necessary to avoid
+creating extra copies of the model.  If your
+vectors are small, you can use a simple
+implementation with a clone, as shown in the
+comment.
+
+<P>
+Serializable is not strictly necessary, but
+often highly desirable with creating
+collections of vectors.  For example, you can
+use the wrapper class <TT>VectCache</TT> to
+create a collection of <TT>Vect</TT>'s that
+are cached to disk.  <TT>VectCache</TT> is
+itself a <TT>Vect</TT>.  You may also want to
+implement a transform that distributes work
+to other nodes.  If neither of these
+situations are the case, you need not check
+the default serialization.
+
+<P>
+Use the static method
+<TT>VectUtil.test(VectConst vect)</TT> to
+test your implementation of all these
+methods.
+
+<P>
+We have now covered all mandatory operations
+required for our generalized inversion.  Some
+optional operations such as hard constraints
+and conditioning are also supported and will
+be discussed later.
+
+<P>
+
+<H1><A NAME="SECTION00030000000000000000">
+Abstraction of non-linear
+simulation</A>
+</H1>
+
+<P>
+Next we need an abstraction of the
+calculations that simulate our data from a
+particular model.  The inversion algorithm is
+not interested in implementation details, but
+only in the application of the transform.  If
+our data are encapsulated as a vector <IMG
+ WIDTH="17" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
+ SRC="img1.png"
+ ALT="${\svector d}$">
+and our model as <IMG
+ WIDTH="23" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
+ SRC="img2.png"
+ ALT="${\svector m}$">, then we can write our
+simulation as <!-- MATH
+ ${\svector d}= {\svector f}( {\svector m})$
+ -->
+<IMG
+ WIDTH="83" HEIGHT="37" ALIGN="MIDDLE" BORDER="0"
+ SRC="img10.png"
+ ALT="${\svector d}= {\svector f}( {\svector m})$">.
+
+<P>
+With just a forward transform (simulation),
+no inversion could efficiently estimate the
+model that best explains a particular
+dataset.  The inversion would only be able to
+try different random models and compare the
+results, without any suggestion on how best
+to modify the model.  Our abstraction of a
+transform requires two more operations.
+
+<P>
+First, we must know how a small perturbation
+of a model affects the data.  If we add a
+small perturbation <!-- MATH
+ ${\svector \Delta {\svector m}}$
+ -->
+<IMG
+ WIDTH="40" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
+ SRC="img11.png"
+ ALT="${\svector \Delta {\svector m}}$"> to a reference
+model <!-- MATH
+ ${\svector m_0}$
+ -->
+<IMG
+ WIDTH="30" HEIGHT="33" ALIGN="MIDDLE" BORDER="0"
+ SRC="img12.png"
+ ALT="${\svector m_0}$">, then we would like to know the
+resulting perturbation to the data <!-- MATH
+ ${\svector \Delta {\svector d}}$
+ -->
+<IMG
+ WIDTH="34" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
+ SRC="img13.png"
+ ALT="${\svector \Delta {\svector d}}$">.
+We must be able to implement a linear
+transform <!-- MATH
+ ${{\stensor F}( {\svector m_0})}$
+ -->
+<IMG
+ WIDTH="58" HEIGHT="37" ALIGN="MIDDLE" BORDER="0"
+ SRC="img14.png"
+ ALT="${{\stensor F}( {\svector m_0})}$"> so that
+
+<P>
+<BR>
+<DIV ALIGN="RIGHT">
+
+<!-- MATH
+ \begin{equation}
+{\svector \Delta {\svector d}}= {{\stensor F}( {\svector m_0})}\cdot {\svector \Delta {\svector m}}\approx {\svector f}({\svector m_0}+ {\svector \Delta {\svector m}}) - {\svector f}( {\svector m_0}) .
+\end{equation}
+ -->
+<TABLE WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE"><TD ALIGN="CENTER" NOWRAP><IMG
+ WIDTH="366" HEIGHT="33" BORDER="0"
+ SRC="img15.png"
+ ALT="\begin{displaymath}
+{\svector \Delta {\svector d}}= {{\stensor F}( {\svector m_0...
+...ector \Delta {\svector m}}) - {\svector f}( {\svector m_0}) .
+\end{displaymath}"></TD>
+<TD WIDTH=10 ALIGN="RIGHT">
+(1)</TD></TR>
+</TABLE>
+<BR CLEAR="ALL"></DIV><P></P>
+
+<P>
+The operator <!-- MATH
+ ${{\stensor F}( {\svector m_0})}$
+ -->
+<IMG
+ WIDTH="58" HEIGHT="37" ALIGN="MIDDLE" BORDER="0"
+ SRC="img14.png"
+ ALT="${{\stensor F}( {\svector m_0})}$"> is linear if
+the following equality holds
+
+<P>
+<BR>
+<DIV ALIGN="CENTER">
+
+<!-- MATH
+ \begin{eqnarray}
+{{\stensor F}( {\svector m_0})}\cdot (\alpha {\svector \Delta {\svector m}}_1 + \beta {\svector \Delta {\svector m}}_2)
+  \equiv \alpha ~ {{\stensor F}( {\svector m_0})}\cdot {\svector \Delta {\svector m}}_1 + \beta ~ {{\stensor F}( {\svector m_0})}\cdot {\svector \Delta {\svector m}}_2 \\
+~\mbox{for all}~ \alpha, \beta, {\svector \Delta {\svector m}}_1, ~\mbox{and}~ {\svector \Delta {\svector m}}_2 .
+\nonumber
+\end{eqnarray}
+ -->
+<TABLE ALIGN="CENTER" CELLPADDING="0" WIDTH="100%">
+<TR VALIGN="MIDDLE"><TD NOWRAP ALIGN="RIGHT"><IMG
+ WIDTH="526" HEIGHT="37" ALIGN="MIDDLE" BORDER="0"
+ SRC="img16.png"
+ ALT="$\displaystyle {{\stensor F}( {\svector m_0})}\cdot (\alpha {\svector \Delta {\s...
+...+ \beta ~ {{\stensor F}( {\svector m_0})}\cdot {\svector \Delta {\svector m}}_2$"></TD>
+<TD>&nbsp;</TD>
+<TD>&nbsp;</TD>
+<TD WIDTH=10 ALIGN="RIGHT">
+(2)</TD></TR>
+<TR VALIGN="MIDDLE"><TD NOWRAP ALIGN="RIGHT"><IMG
+ WIDTH="249" HEIGHT="35" ALIGN="MIDDLE" BORDER="0"
+ SRC="img17.png"
+ ALT="$\displaystyle ~\mbox{for all}~ \alpha, \beta, {\svector \Delta {\svector m}}_1, ~\mbox{and}~ {\svector \Delta {\svector m}}_2 .$"></TD>
+<TD>&nbsp;</TD>
+<TD>&nbsp;</TD>
+<TD WIDTH=10 ALIGN="RIGHT">
+&nbsp;</TD></TR>
+</TABLE></DIV><BR CLEAR="ALL"><P></P>
+
+<P>
+I always attempt to parameterize my
+model so that this linearization is as good
+as possible.  The better the linearization,
+the better the convergence.
+
+<P>
+Finally, we will need a transpose <!-- MATH
+ ${\stensor F}^T
+({\svector m_0})$
+ -->
+<IMG
+ WIDTH="69" HEIGHT="42" ALIGN="MIDDLE" BORDER="0"
+ SRC="img18.png"
+ ALT="${\stensor F}^T
+({\svector m_0})$"> of the linear transform.  A transpose
+is defined by the equality
+
+<P>
+<BR>
+<DIV ALIGN="RIGHT">
+
+<!-- MATH
+ \begin{equation}
+{\svector \Delta {\svector d}}\cdot [ {{\stensor F}( {\svector m_0})}\cdot {\svector \Delta {\svector m}}] 
+\equiv [{{\stensor F}^T ( {\svector m_0})}\cdot {\svector \Delta {\svector d}}] \cdot {\svector \Delta {\svector m}}~ \mbox{for all} ~{\svector \Delta {\svector d}}~
+\mbox{and} ~{\svector \Delta {\svector m}}.
+\end{equation}
+ -->
+<TABLE WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE"><TD ALIGN="CENTER" NOWRAP><IMG
+ WIDTH="522" HEIGHT="33" BORDER="0"
+ SRC="img19.png"
+ ALT="\begin{displaymath}
+{\svector \Delta {\svector d}}\cdot [ {{\stensor F}( {\svect...
+...ta {\svector d}}~
+\mbox{and} ~{\svector \Delta {\svector m}}.
+\end{displaymath}"></TD>
+<TD WIDTH=10 ALIGN="RIGHT">
+(3)</TD></TR>
+</TABLE>
+<BR CLEAR="ALL"></DIV><P></P>
+
+<P>
+The transpose is known as
+``back-projection'' in tomography and as
+``back-propagation'' in neural networks.
+
+<P>
+In addition to vectors for the data and
+model, our generic inversion will require us
+to implement an interface for this transform.
+In Java, the three essential operations look
+like
+
+<P>
+<PRE> 
+public interface Transform {
+  /** Non-linear transform: data = f(model).
+      @param data Output.  Initial values are ignored.
+      @param model Input. Unchanged.
+   */
+  public void forwardNonlinear(Vect data, VectConst model);
+
+  /** A linearized approximation of the forward transform
+      for a small perturbation (model) to a reference model (modelReference).
+      The output data must be a linear function of the model perturbation.
+      Linearized transform:
+        data = F model ~= f(model + modelReference) - f(modelReference)
+      @param data Output.  Initial values are ignored.
+      @param model Perturbation to reference model.
+      @param modelReference The reference model for the linearized operator.
+   */
+  public void forwardLinearized(Vect data, VectConst model,
+                                VectConst modelReference);
+
+  /** The transpose of the linearized approximation of the forward transform
+      for a small perturbation (model) to a reference model (modelReference):
+      model = F' data.  Add the result to the existing model.
+      @param data Input for transpose operation.
+      @param model Output.  The transpose will be added to this vector.
+      @param modelReference The reference model for the linearized operator.
+   */
+  public void addTranspose(VectConst data, Vect model,
+                           VectConst modelReference);
+  ...
+}
+</PRE> 
+
+<P>
+In addition, there is an optional
+inverse Hessian method that can be used to
+speed convergence.  We will discuss this
+method later.
+
+<P>
+Use the static method
+<TT>VectUtil.getTransposePrecision</TT> to
+ensure that your transpose satisfies the
+dot-product definition.
+
+<P>
+We now have all the properties required for a
+generalized inversion of a transform to
+obtain a model vector that best explains a
+data vector.
+
+<P>
+
+<H1><A NAME="SECTION00040000000000000000">
+A damped least-squared objective
+function</A>
+</H1>
+
+<P>
+The damped least squares objective function
+behaves well for geophysical problems that
+are both over-determined and
+under-determined.  When over-determined,
+errors in data will be distributed as
+uniformly as possible.  When
+under-determined, components of the model
+will be suppressed if they do not improve the
+fit with data significantly.  For motivation
+of damped least squares as a stochastic
+optimization see Menke [<A
+ HREF="inv.html#menke">7</A>], Jaynes
+[<A
+ HREF="inv.html#jaynes">4</A>], or Box and Tiao
+[<A
+ HREF="inv.html#boxandtiao">1</A>].
+
+<P>
+We assume that our data <IMG
+ WIDTH="17" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
+ SRC="img1.png"
+ ALT="${\svector d}$"> are a
+non-linear function <!-- MATH
+ ${\svector f}({\svector m})$
+ -->
+<IMG
+ WIDTH="46" HEIGHT="37" ALIGN="MIDDLE" BORDER="0"
+ SRC="img20.png"
+ ALT="${\svector f}({\svector m})$"> of our model
+<IMG
+ WIDTH="23" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
+ SRC="img2.png"
+ ALT="${\svector m}$">.  The noise vector <IMG
+ WIDTH="17" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
+ SRC="img21.png"
+ ALT="${\svector n}$"> will be any
+component of our data that we cannot explain:
+
+<P>
+<BR>
+<DIV ALIGN="RIGHT">
+
+<!-- MATH
+ \begin{equation}
+{\svector d}= {\svector f}( {\svector m}) + {\svector n}.
+\end{equation}
+ -->
+<TABLE WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE"><TD ALIGN="CENTER" NOWRAP><IMG
+ WIDTH="116" HEIGHT="33" BORDER="0"
+ SRC="img22.png"
+ ALT="\begin{displaymath}
+{\svector d}= {\svector f}( {\svector m}) + {\svector n}.
+\end{displaymath}"></TD>
+<TD WIDTH=10 ALIGN="RIGHT">
+(4)</TD></TR>
+</TABLE>
+<BR CLEAR="ALL"></DIV><P></P>
+
+<P>
+Assume the noise <IMG
+ WIDTH="17" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
+ SRC="img21.png"
+ ALT="${\svector n}$"> and model
+<IMG
+ WIDTH="23" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
+ SRC="img2.png"
+ ALT="${\svector m}$"> are sampled from separate Gaussian
+distributions.  The model that best explains
+a specific dataset is the one that minimizes
+this objective function.
+
+<P>
+<BR>
+<DIV ALIGN="RIGHT">
+
+<!-- MATH
+ \begin{equation}
+\min_{{\svector m}} ~ [{\svector d}- {\svector f}({\svector m}) ] \cdot {{\stensor C}}_n^{-1}\cdot [{\svector d}- {\svector f}({\svector m}) ]
+            + {\svector m}\cdot {{\stensor C}}_m^{-1}\cdot {\svector m}.
+\end{equation}
+ -->
+<TABLE WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE"><TD ALIGN="CENTER" NOWRAP><A NAME="eq:obj"></A><IMG
+ WIDTH="399" HEIGHT="41" BORDER="0"
+ SRC="img23.png"
+ ALT="\begin{displaymath}
+\min_{{\svector m}} ~ [{\svector d}- {\svector f}({\svector ...
+...
++ {\svector m}\cdot {{\stensor C}}_m^{-1}\cdot {\svector m}.
+\end{displaymath}"></TD>
+<TD WIDTH=10 ALIGN="RIGHT">
+(5)</TD></TR>
+</TABLE>
+<BR CLEAR="ALL"></DIV><P></P>
+
+<P>
+The covariance matrices describe
+expected correlations between each Gaussian
+parameter in a vector.  (Assume without loss
+of generality that the mean of the model and
+noise are zero.  We can adjust our transform
+accordingly.)
+
+<P>
+This objective function will be easier to
+optimize if covariances are as diagonal as
+possible.  I discuss such manipulation of the
+quadratic objective function in the paper
+``Regularization by Model Parameterization''
+[<A
+ HREF="inv.html#harlan-model">3</A>].  I strongly recommend
+you examine this paper as well.
+
+<P>
+You need only damp the magnitude of the model
+slightly to assure a stable inverse.  If your
+noise and model samples are completely
+stationary and independent, your
+<TT>Vect.multiplyInverseHessian()</TT>
+methods need only multiply by a scalar.  I
+first anticipate reasonable physical
+magnitudes for the noise and for the model.
+If both noise and model attain their most
+reasonable values, then the two squared
+penalty terms should be equal in the
+objective function (<A HREF="#eq:obj">5</A>).  Instead I
+adjust covariances so that model parameters
+can attain magnitudes 10 or 100 times their
+most reasonable values before the two terms
+are equal.  This minimal damping is
+sufficient to guarantee a stable inverse
+without distorting the solution
+unnecessarily.  (Note that both covariances
+can be multiplied by the same arbitrary scale
+factor without affecting the final solution.)
+
+<P>
+A Gauss-Newton algorithm iteratively
+approximates the objective function as a
+quadratic function of a perturbation of the
+model:
+
+<P>
+<BR>
+<DIV ALIGN="CENTER"><A NAME="eq:qobj"></A>
+<!-- MATH
+ \begin{eqnarray}
+\min_{{\svector \Delta {\svector m}}} ~  [{\svector d}- {\svector f}({\svector m_0}) - {{\stensor F}( {\svector m_0})}\cdot {\svector \Delta {\svector m}}] \cdot
+ {{\stensor C}}_n^{-1}\cdot [{\svector d}- {\svector f}({\svector m_0}) - {{\stensor F}( {\svector m_0})}\cdot {\svector \Delta {\svector m}}] \nonumber \\
+           + ({\svector m_0}+ {\svector \Delta {\svector m}})  \cdot {{\stensor C}}_m^{-1}\cdot ({\svector m_0}+ {\svector \Delta {\svector m}}).
+\end{eqnarray}
+ -->
+<TABLE ALIGN="CENTER" CELLPADDING="0" WIDTH="100%">
+<TR VALIGN="MIDDLE"><TD NOWRAP ALIGN="RIGHT"><IMG
+ WIDTH="552" HEIGHT="44" ALIGN="MIDDLE" BORDER="0"
+ SRC="img24.png"
+ ALT="$\displaystyle \min_{{\svector \Delta {\svector m}}} ~ [{\svector d}- {\svector ...
+...or m_0}) - {{\stensor F}( {\svector m_0})}\cdot {\svector \Delta {\svector m}}]$"></TD>
+<TD>&nbsp;</TD>
+<TD>&nbsp;</TD>
+<TD WIDTH=10 ALIGN="RIGHT">
+&nbsp;</TD></TR>
+<TR VALIGN="MIDDLE"><TD NOWRAP ALIGN="RIGHT"><IMG
+ WIDTH="283" HEIGHT="41" ALIGN="MIDDLE" BORDER="0"
+ SRC="img25.png"
+ ALT="$\displaystyle + ({\svector m_0}+ {\svector \Delta {\svector m}}) \cdot {{\stensor C}}_m^{-1}\cdot ({\svector m_0}+ {\svector \Delta {\svector m}}).$"></TD>
+<TD>&nbsp;</TD>
+<TD>&nbsp;</TD>
+<TD WIDTH=10 ALIGN="RIGHT">
+(6)</TD></TR>
+</TABLE></DIV><BR CLEAR="ALL"><P></P>
+
+<P>
+To minimize a completely quadratic
+objective function, we can use the
+well-understood conjugate-gradient algorithm
+(see Gill et al [<A
+ HREF="inv.html#gill">2</A>] or Luenberger
+[<A
+ HREF="inv.html#luenberger">6</A>]).  The best perturbation of
+the model <!-- MATH
+ ${\svector \Delta {\svector m}}$
+ -->
+<IMG
+ WIDTH="40" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
+ SRC="img11.png"
+ ALT="${\svector \Delta {\svector m}}$"> is is actually a linear
+function of the remaining error in the data
+<!-- MATH
+ ${\svector d}- {\svector f}({\svector m_0})$
+ -->
+<IMG
+ WIDTH="88" HEIGHT="37" ALIGN="MIDDLE" BORDER="0"
+ SRC="img26.png"
+ ALT="${\svector d}- {\svector f}({\svector m_0})$">.
+
+<P>
+We might be tempted simply to add the
+perturbation <!-- MATH
+ ${\svector \Delta {\svector m}}$
+ -->
+<IMG
+ WIDTH="40" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
+ SRC="img11.png"
+ ALT="${\svector \Delta {\svector m}}$"> to the reference model
+<!-- MATH
+ ${\svector m_0}$
+ -->
+<IMG
+ WIDTH="30" HEIGHT="33" ALIGN="MIDDLE" BORDER="0"
+ SRC="img12.png"
+ ALT="${\svector m_0}$">, but non-linearity in the transform
+can cause divergence.  Instead the algorithm
+solves for a single scale factor <IMG
+ WIDTH="17" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
+ SRC="img5.png"
+ ALT="$\alpha$"> to
+multiply the perturbation <!-- MATH
+ ${\svector \Delta {\svector m}}$
+ -->
+<IMG
+ WIDTH="40" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
+ SRC="img11.png"
+ ALT="${\svector \Delta {\svector m}}$"> before
+addition.
+
+<P>
+<BR>
+<DIV ALIGN="CENTER">
+
+<!-- MATH
+ \begin{eqnarray}
+\min_{\alpha} ~  [{\svector d}- {\svector f}({\svector m_0}+ \alpha {\svector \Delta {\svector m}}) ] \cdot
+ {{\stensor C}}_n^{-1}\cdot [{\svector d}- {\svector f}({\svector m_0}+ \alpha {\svector \Delta {\svector m}}) ] \nonumber \\
+           + ({\svector m_0}+ \alpha {\svector \Delta {\svector m}})  \cdot {{\stensor C}}_m^{-1}\cdot ({\svector m_0}+ \alpha {\svector \Delta {\svector m}}).
+\end{eqnarray}
+ -->
+<TABLE ALIGN="CENTER" CELLPADDING="0" WIDTH="100%">
+<TR VALIGN="MIDDLE"><TD NOWRAP ALIGN="RIGHT"><IMG
+ WIDTH="436" HEIGHT="41" ALIGN="MIDDLE" BORDER="0"
+ SRC="img27.png"
+ ALT="$\displaystyle \min_{\alpha} ~ [{\svector d}- {\svector f}({\svector m_0}+ \alph...
+...ector d}- {\svector f}({\svector m_0}+ \alpha {\svector \Delta {\svector m}}) ]$"></TD>
+<TD>&nbsp;</TD>
+<TD>&nbsp;</TD>
+<TD WIDTH=10 ALIGN="RIGHT">
+&nbsp;</TD></TR>
+<TR VALIGN="MIDDLE"><TD NOWRAP ALIGN="RIGHT"><IMG
+ WIDTH="307" HEIGHT="41" ALIGN="MIDDLE" BORDER="0"
+ SRC="img28.png"
+ ALT="$\displaystyle + ({\svector m_0}+ \alpha {\svector \Delta {\svector m}}) \cdot {{\stensor C}}_m^{-1}\cdot ({\svector m_0}+ \alpha {\svector \Delta {\svector m}}).$"></TD>
+<TD>&nbsp;</TD>
+<TD>&nbsp;</TD>
+<TD WIDTH=10 ALIGN="RIGHT">
+(7)</TD></TR>
+</TABLE></DIV><BR CLEAR="ALL"><P></P>
+
+<P>
+Often in geophysical problems, the
+original objective function (<A HREF="#eq:obj">5</A>)
+has less curvature than the quadratic
+approximation.  In such a case, the estimated
+scale factor <IMG
+ WIDTH="17" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
+ SRC="img5.png"
+ ALT="$\alpha$"> can be expected to be
+less than one.
+
+<P>
+To search for a single scalar in a known
+range, the line-search algorithm
+(<TT>ScalarSolver</TT>) minimizes the number
+of evaluations of the original objective
+function.  I use a line-search that searches
+for a parabolic minimum with hyper-linear
+convergence.  If convergence is poor because
+of strong non-linearity, the search resorts
+to a golden section with at least linear
+convergence.
+
+<P>
+
+<H1><A NAME="SECTION00050000000000000000">
+Constraints and conditioning</A>
+</H1>
+
+<P>
+The <TT>Vect</TT> and <TT>Transform</TT>
+interfaces include some optional methods to
+apply constraints and to improve convergence.
+
+<P>
+Often our nonlinearity is due entirely to
+hard constraints upon our model.  For
+example, seismic velocities may be
+constrained to a strict range of positive
+values.
+
+<P>
+We also often have an partial inverse of our
+forward transform, perhaps from an analytic
+derivation that assumes our data are more
+evenly sampled.  Or we may know that a
+forward and transpose operation amplifies
+certain components of the data.  We should be
+able to use such information to improve
+convergence.
+
+<P>
+If you have a simple hard constraint, such as
+an inequality, define it in the method
+<TT>Vect.constrain()</TT>.  An empty
+implementation does nothing.  This method
+does not affect the conjugate-gradient
+optimization of the quadratic approximation.
+Instead this method is applied after adding a
+perturbation to the reference model.  The
+method is called repeatedly during the line
+search for a best scale factor for the
+perturbation.
+
+<P>
+You may instead wish to limit the degrees of
+freedom available to an update, without
+similarly constraining your reference model.
+Your model and your updates need not share
+the same implementations of the <TT>Vect</TT>
+interface.  You need only convert from one to
+the other by implementing the
+<TT>Vect.project</TT> method, which has the
+same arguments as the <TT>Vect.add</TT>
+method.
+
+<P>
+Most users of prepackaged inversions are
+familiar with ``preconditioning'' as a method
+of improving convergence.  Instead of
+attempting to invert a transform like <!-- MATH
+ ${\svector d}=
+{\svector f}({\svector m})$
+ -->
+<IMG
+ WIDTH="83" HEIGHT="37" ALIGN="MIDDLE" BORDER="0"
+ SRC="img10.png"
+ ALT="${\svector d}= {\svector f}( {\svector m})$">, one inverts a related problem
+<!-- MATH
+ ${\stensor P}\cdot {\svector d}= {\stensor P}\cdot {\svector f}({\svector m})$
+ -->
+<IMG
+ WIDTH="140" HEIGHT="37" ALIGN="MIDDLE" BORDER="0"
+ SRC="img29.png"
+ ALT="${\stensor P}\cdot {\svector d}= {\stensor P}\cdot {\svector f}({\svector m})$">.  The
+preconditioning transform <IMG
+ WIDTH="19" HEIGHT="35" ALIGN="MIDDLE" BORDER="0"
+ SRC="img30.png"
+ ALT="${\stensor P}$"> amplifies
+components of the data that should be
+inverted first.  Unfortunately, solving this
+problem is not the same as solving our
+original problem.  Our final distribution of
+errors will be different.  We have
+effectively defined a new dataset and a new
+transform, which of course we can do at any
+time without help from the inversion code.
+
+<P>
+As I mentioned before, my favorite method of
+stabilizing and improving convergence is a
+reparameterization of the model
+[<A
+ HREF="inv.html#harlan-model">3</A>].  This approach
+simplifies and diagonalizes the model
+covariance operator.
+
+<P>
+Even after reparameterization, we may want to
+encourage certain parts of the model to be
+updated first.  We may know that our forward
+transform has greater or lesser sensitivity
+to certain components of our model.  Both the
+<TT>Vect</TT> and <TT>Transform</TT>
+interfaces allow us to add
+``post-conditioning'' that takes advantage of
+such knowledge.
+
+<P>
+The <TT>Vect</TT> interface has an optional
+method <TT>Vect.postCondition()</TT>.
+If you define an empty implementation for
+this method, you will receive the default
+behavior, which should be fine.  For better
+convergence, this method can apply a linear
+filter to the data that enhances components
+that should be optimized first, and
+suppresses components of lesser importance.
+This is the last operation applied to a model
+gradient before use in the conjugate-gradient
+algorithm.  Your objective function is not
+modified, but your perturbations of that
+model will improve.  You should be able to
+obtain a better model in fewer iterations.
+
+<P>
+Alternatively, you may have already have an
+approximate linear inverse for the linearized
+forward transform.  We call this inverse the
+``inverse Hessian'' because the Hessian is
+the tensor curvature of the quadratic
+approximation.  For a given linearization
+<!-- MATH
+ ${{\stensor F}( {\svector m_0})}$
+ -->
+<IMG
+ WIDTH="58" HEIGHT="37" ALIGN="MIDDLE" BORDER="0"
+ SRC="img14.png"
+ ALT="${{\stensor F}( {\svector m_0})}$">, the inverse Hessian <!-- MATH
+ ${\stensor G}( {\svector m_0})$
+ -->
+<IMG
+ WIDTH="62" HEIGHT="37" ALIGN="MIDDLE" BORDER="0"
+ SRC="img31.png"
+ ALT="${\stensor G}( {\svector m_0})$">
+should be the partial inverse
+
+<P>
+<BR>
+<DIV ALIGN="CENTER">
+
+<!-- MATH
+ \begin{eqnarray}
+{\stensor G}( {\svector m_0}) \approx [ {{\stensor F}^T ( {\svector m_0})}\cdot {{\stensor F}( {\svector m_0})}]^{-1}, ~ \mbox{or} \\
+{\stensor G}( {\svector m_0}) \cdot [ {{\stensor F}^T ( {\svector m_0})}\cdot {{\stensor F}( {\svector m_0})}] \approx {{\stensor I}}.
+\end{eqnarray}
+ -->
+<TABLE ALIGN="CENTER" CELLPADDING="0" WIDTH="100%">
+<TR VALIGN="MIDDLE"><TD NOWRAP ALIGN="RIGHT"><IMG
+ WIDTH="278" HEIGHT="42" ALIGN="MIDDLE" BORDER="0"
+ SRC="img32.png"
+ ALT="$\displaystyle {\stensor G}( {\svector m_0}) \approx [ {{\stensor F}^T ( {\svector m_0})}\cdot {{\stensor F}( {\svector m_0})}]^{-1}, ~ \mbox{or}$"></TD>
+<TD>&nbsp;</TD>
+<TD>&nbsp;</TD>
+<TD WIDTH=10 ALIGN="RIGHT">
+(8)</TD></TR>
+<TR VALIGN="MIDDLE"><TD NOWRAP ALIGN="RIGHT"><IMG
+ WIDTH="256" HEIGHT="42" ALIGN="MIDDLE" BORDER="0"
+ SRC="img33.png"
+ ALT="$\displaystyle {\stensor G}( {\svector m_0}) \cdot [ {{\stensor F}^T ( {\svector m_0})}\cdot {{\stensor F}( {\svector m_0})}] \approx {{\stensor I}}.$"></TD>
+<TD>&nbsp;</TD>
+<TD>&nbsp;</TD>
+<TD WIDTH=10 ALIGN="RIGHT">
+(9)</TD></TR>
+</TABLE></DIV><BR CLEAR="ALL"><P></P>
+
+<P>
+As long as the product <!-- MATH
+ ${\stensor G}\cdot
+{\stensor F}^T \cdot {\stensor F}$
+ -->
+<IMG
+ WIDTH="87" HEIGHT="42" ALIGN="MIDDLE" BORDER="0"
+ SRC="img34.png"
+ ALT="${\stensor G}\cdot
+{\stensor F}^T \cdot {\stensor F}$"> is more diagonal, or better
+balanced along the diagonal, this inverse
+Hessian will improve convergence.  In
+tomography such a filter is called ``hit
+count balancing'' and in slant-stacks a ``rho
+filter.'' Again, this operator implies no
+change in the objective function, just in the
+way we perturb our solution.
+
+<P>
+One last optional operation is useful for
+very noisy data:
+<TT>Transform.adjustRobustErrors(Vect
+dataError)</TT>.  This operation does imply a
+change to our objective function, though a
+minor one.  This method will be passed an
+estimate of the errors in fitting the data
+-- the original data minus the simulation of
+the data with the best current model.  Your
+method may detect that a small subset of your
+data has exceptionally large errors.  Rather
+than allow a few bad data to distort your
+result, your method can clip or scale back
+these errors.  Do not change the overall
+variance of the errors more than necessary.
+(If you are familiar with L1 optimization,
+you can also use this method to divide all
+errors by their previous magnitudes, to
+iteratively approximate a median fit to your
+data.)
+
+<P>
+
+<H1><A NAME="SECTION00060000000000000000">
+The Gauss Newton solver</A>
+</H1>
+
+<P>
+Most everything unique about your inversion
+problem is described by your implementation
+of the <TT>Vect</TT> and <TT>Transform</TT>
+interfaces.  For an inversion with all
+features described previously, you should
+call this static method of
+<TT>GaussNewtonSolver</TT>:
+
+<P>
+<PRE> 
+public class GaussNewtonSolver {
+  public static Vect solve (VectConst data,
+                            VectConst referenceModel,
+                            VectConst perturbModel,   // optional
+                            Transform transform,     
+                            boolean dampOnlyPerturbation,
+                            int conjugateGradIterations,
+                            int lineSearchIterations,
+                            int linearizationIterations,
+                            double lineSearchError,
+                            Monitor monitor)         // optional
+...
+}
+</PRE> 
+
+<P>
+The return value of this method is the model
+that best explains an instance of your data,
+passed as the first argument <TT>data</TT>.
+
+<P>
+The second argument <TT>referenceModel</TT>
+is the model that should be used as the
+initial guess of your solution.  Often you
+can initialize this model to a zero
+magnitude.  The returned solution will be
+always be a revised instance of this
+reference model.
+
+<P>
+If you want to perturb the reference model
+with an instance of a different class, then
+provide a <TT>perturbModel</TT>.  If
+<TT>perturbModel</TT> is null, then instances
+of the reference model will be used for
+perturbations.  The <TT>project</TT> method
+of the reference model should accept the
+perturbation as an argument.  Perturbations
+should have fewer degrees of freedom than the
+reference model, because projection will lose
+any additional degrees of freedom.  The
+initial state of this vector is ignored.
+
+<P>
+Your <TT>Transform</TT> should be able to
+model your data from the reference model with
+<TT>forwardNonlinear</TT>, and should be able
+to use either model as perturbations in the
+<TT>forwardLinearized</TT> and
+<TT>addTranspose</TT> methods.
+
+<P>
+If <TT>dampOnlyPerturbations</TT> is true,
+then the objective function will only
+minimize differences between your reference
+model and your new model.  Otherwise, the
+absolute <TT>Vect.magnitude()</TT> of your
+model will be minimized.
+
+<P>
+Remaining parameters let you control how much
+computational effort you are willing to
+expend on the solution.
+
+<P>
+Each quadratic approximation should be
+minimized with at least a few iterations of
+conjugate-gradients.  The parameter
+<TT>conjugateGradIterations</TT> should have
+a minimum of 3 iterations and a typical value
+of 4 or 5.  If your transform is relatively
+inexpensive, then indulge in a few more.
+Each iteration results in an additional
+evaluation of the linearized forward and
+transpose transform.  If this parameter has a
+value of 1, then your optimization will be
+equivalent to non-linear steepest-descent,
+which is notorious for poor convergence when
+the Hessian has a poorly balanced diagonal.
+
+<P>
+To scale the conjugate-gradient perturbation,
+we must perform a line search.  The parameter
+<TT>lineSearchIterations</TT> controls the
+maximum number of evaluations of the
+non-linear forward transform to be used for
+this search.  Because of the hyper-linear
+convergence, you can expect fairly good
+optimization of this scale factor with as few
+as 12 iterations.  Typically I prefer a safer
+value of 20, beyond which you are unlikely to
+see an improvement.  If you specify 0, then
+you will get a default scale factor of 1.
+Such a choice might converge well on a
+transform that was almost entirely linear to
+begin with.  A value of 1 might be a good
+choice if the your only non-linearity results
+from hard constraints on your model from the
+<TT>Vect.constrain()</TT> method.
+
+<P>
+The number of iterations actually used for
+the line search depends on the required
+precision of the scale factor.  The parameter
+<TT>lineSearchError</TT> is the acceptable
+fractional error in the estimated scale
+factor.  I typically use a value of 0.001 or
+smaller.
+
+<P>
+The parameter
+<TT>linearizationIterations</TT> controls the
+outermost loop of reapproximating the
+objective function as a quadratic.  Each of
+these iterations multiplies the number of
+conjugate-gradient and line search
+evaluations required.  The number of
+quadratic approximations should be fairly
+small, unless your transform is strongly
+non-linear.  I typically choose a minimum
+value of 3 unless I can afford more.
+
+<P>
+If you wish to save the results of each
+linearized iteration, then you can construct
+your own loop: set
+<TT>linearizationIterations</TT> to 1 and
+use the solution from each iteration as the
+reference model for the next.  Managing your
+own outer loop will not increase the
+computational cost significantly.
+
+<P>
+To get a good feel for the difficulty of your
+problem, see if increasing the number of
+iterations or precision improves your
+solution significantly.
+
+<P>
+To track the progress of your inversion, you
+can optionally pass a non-null implementation
+of the <TT>Monitor</TT> interface.  This
+interface defines a single method
+<TT>public void report(double fraction)</TT>
+which will be called regularly with the
+current fraction of work done.  Values range
+from 0 at the beginning to 1 when all work is
+done.  To print the progress to a java
+<TT>Logger</TT>, use the existing
+implementation in <TT>LogMonitor</TT>.
+
+<P>
+
+<H1><A NAME="SECTION00070000000000000000">
+Simpler conjugate-gradient and
+scalar solvers</A>
+</H1>
+
+<P>
+If your transform is entirely linear, you
+need only use a conjugate-gradient solver.
+You can implement the simpler
+<TT>LinearTransform</TT> interface that
+contains one instead of two forward
+transforms.  Use this solver instead:
+
+<P>
+<PRE> 
+public class GaussNewtonSolver {
+...
+  public static Vect solve (VectConst data,
+                            VectConst referenceModel,
+                            LinearTransform linearTransform,
+                            boolean dampOnlyPerturbation,
+                            int conjugateGradIterations,
+                            Monitor monitor) 
+...
+}
+</PRE> 
+
+<P>
+All other parameters have the same meaning as
+before.  No linearization or line-search is
+necessary, so the corresponding parameters
+have disappeared.
+
+<P>
+The conjugate-gradient algorithm itself is
+contained in the
+<TT>QuadraticSolver</TT> class.  To
+use this class directly, you must construct
+the normal equations of your least-squares
+problem, including a Hessian operator.  For
+inversion problems, this form is much less
+convenient than the
+<TT>GaussNewtonSolver.solve</TT> method
+above.  But if your objective function is
+already expressed as a simple quadratic, then
+you might want to use this lower-level class.
+
+<P>
+You might also have occasion to estimate a
+single parameter that minimizes some
+arbitrary function.  You can use the
+<TT>ScalarSolver</TT> class directly by
+implementing the single method in the
+<TT>ScalarSolver.Function</TT> interface.
+This is the same algorithm used internally by
+the Gauss-Newton algorithm for the
+line-search of a scale factor.
+
+<P>
+
+<H1><A NAME="SECTION00080000000000000000">
+Conclusion</A>
+</H1>
+
+<P>
+I have described all methods available in the
+interfaces available for solving a
+generalized least-squares inversion problem.
+Methods exist for testing the internal
+consistency of your implementations.  I think
+you will find a large number of inversion
+problems can be solved by this framework.
+When the simulation is too non-linear for
+this framework, it is also likely to be
+difficult for any framework to optimize well.
+You would be well advised to attempt a
+reparameterization of your model.
+
+<P>
+
+<H2><A NAME="SECTION00090000000000000000">
+Bibliography</A>
+</H2><DL COMPACT><DD><P></P><DT><A NAME="boxandtiao">1</A>
+<DD>
+George&nbsp;E.P. Box and George&nbsp;C. Tiao.
+<BR><EM>Bayesian Inference in Statistical Analysis</EM>.
+<BR>John Wiley and Sons, Inc., 1973.
+
+<P></P><DT><A NAME="gill">2</A>
+<DD>
+Philip&nbsp;E. Gill, Walter Murray, and Margaret&nbsp;H. Wright.
+<BR><EM>Practical Optimization</EM>.
+<BR>Academic Press, 1981.
+
+<P></P><DT><A NAME="harlan-model">3</A>
+<DD>
+William&nbsp;S. Harlan.
+<BR>Regularization by model reparameterization.
+<BR><EM>This website: papers/regularization.pdf</EM>, 1995.
+
+<P></P><DT><A NAME="jaynes">4</A>
+<DD>
+E.T. Jaynes.
+<BR><EM>Probability Theory: The Logic of Science</EM>.
+<BR>Cambridge University Press, 2003.
+
+<P></P><DT><A NAME="luenbergervec">5</A>
+<DD>
+David&nbsp;G. Luenberger.
+<BR><EM>Optimization by Vector Space Methods</EM>.
+<BR>John Wiley and Sons, Inc., 1969.
+
+<P></P><DT><A NAME="luenberger">6</A>
+<DD>
+David&nbsp;G. Luenberger.
+<BR><EM>Introduction to Linear and Nonlinear Programming</EM>.
+<BR>Addison Wesley, 1973.
+
+<P></P><DT><A NAME="menke">7</A>
+<DD>
+William Menke.
+<BR><EM>Geophysical Data Analysis: Discrete Inverse Theory</EM>.
+<BR>Academic Press, Inc., 1984.
+</DL>
+
+<P>
+<BR><HR>
+<ADDRESS>
+Bill Harlan
+2006-07-06
+</ADDRESS>
+</BODY>
+</HTML>

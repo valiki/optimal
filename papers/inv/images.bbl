@@ -1,0 +1,38 @@
+\begin{thebibliography}{1}
+
+\bibitem{boxandtiao}
+George~E.P. Box and George~C. Tiao.
+\newblock {\em Bayesian Inference in Statistical Analysis}.
+\newblock John Wiley and Sons, Inc., 1973.
+
+\bibitem{gill}
+Philip~E. Gill, Walter Murray, and Margaret~H. Wright.
+\newblock {\em Practical Optimization}.
+\newblock Academic Press, 1981.
+
+\bibitem{harlan-model}
+William~S. Harlan.
+\newblock Regularization by model reparameterization.
+\newblock {\em This website: papers/\urlbr{}regularization.pdf}, 1995.
+
+\bibitem{jaynes}
+E.T. Jaynes.
+\newblock {\em Probability Theory: The Logic of Science}.
+\newblock Cambridge University Press, 2003.
+
+\bibitem{luenbergervec}
+David~G. Luenberger.
+\newblock {\em Optimization by Vector Space Methods}.
+\newblock John Wiley and Sons, Inc., 1969.
+
+\bibitem{luenberger}
+David~G. Luenberger.
+\newblock {\em Introduction to Linear and Nonlinear Programming}.
+\newblock Addison Wesley, 1973.
+
+\bibitem{menke}
+William Menke.
+\newblock {\em Geophysical Data Analysis: Discrete Inverse Theory}.
+\newblock Academic Press, Inc., 1984.
+
+\end{thebibliography}
