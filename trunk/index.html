@@ -1,0 +1,141 @@
+<html> <head>
+<title>            Gauss-Newton and Conjugate-Gradient optimization            </title> 
+</head> <body>
+</p><hr> <h2> Gauss-Newton and Conjugate-Gradient optimization </h2><p>
+</p><p>
+This code implements a Gauss-Newton 
+optimization of objective functions that can
+be iteratively approximated by quadratics.
+This approach is particularly appropriate
+for least-squares inversions of moderately
+non-linear transforms.  You will also find
+code for conjugate-gradient and line-search
+optimizations.  
+</p><p>
+Get documentation of the algorithm here:
+ [<a href="../../papers/inv/"> ../../papers/inv/ </a>]   [<a href="../../papers/inv.pdf"> ../../papers/inv.pdf </a>]   [<a href="../../papers/inv.ps.gz"> ../../papers/inv.ps.gz </a>]  
+</p><p>
+See the java documentation in the 
+documentation subdirectory  [<a href="documentation"> documentation </a>] .
+</p><p>
+All files with <code>main</code> contain test code.
+You can run all tests with <code>Test.main().</code>
+</p><p>
+See an older C++ version  [<a href="../conjugate_gradients/"> ../conjugate_gradients/ </a>] 
+</p><p>
+Several papers describe ways to use this code:
+   [<a href="../../papers/regularization.pdf"> ../../papers/regularization.pdf </a>]   [<a href="../../papers/regularization/"> ../../papers/regularization/ </a>] 
+   [<a href="../../papers/neural.pdf"> ../../papers/neural.pdf </a>]   [<a href="../../papers/neural/"> ../../papers/neural/ </a>] 
+   [<a href="../../papers/rmsinv.pdf"> ../../papers/rmsinv.pdf </a>]   [<a href="../../papers/rmsinv/"> ../../papers/rmsinv/ </a>] 
+
+
+<hr>
+<table>
+<tr>
+<th align=left> File: </th> 
+<th align=right> &nbsp; Bytes: </th> 
+<th align=left> &nbsp; Modified: </th> 
+</tr>
+<tr> <td> <a href="Almost.java"> Almost.java </a> &nbsp; </td>  <!-- Almost.java -->
+<td align=right> &nbsp; 11578 </td> <!-- Almost.java -->
+<td align=right> &nbsp; 2006-08-19 15:04:19.216395000 -0600 </td> </tr> <!-- Almost.java -->
+<tr> <td> <a href="ArrayUtil.java"> ArrayUtil.java </a> &nbsp; </td>  <!-- ArrayUtil.java -->
+<td align=right> &nbsp; 46879 </td> <!-- ArrayUtil.java -->
+<td align=right> &nbsp; 2006-08-19 15:04:19.361397000 -0600 </td> </tr> <!-- ArrayUtil.java -->
+<tr> <td> <a href="ArrayVect1.java"> ArrayVect1.java </a> &nbsp; </td>  <!-- ArrayVect1.java -->
+<td align=right> &nbsp; 4097 </td> <!-- ArrayVect1.java -->
+<td align=right> &nbsp; 2006-08-19 15:04:19.559359000 -0600 </td> </tr> <!-- ArrayVect1.java -->
+<tr> <td> <a href="CleanFormatter.java"> CleanFormatter.java </a> &nbsp; </td>  <!-- CleanFormatter.java -->
+<td align=right> &nbsp; 3637 </td> <!-- CleanFormatter.java -->
+<td align=right> &nbsp; 2006-08-19 15:04:19.687363000 -0600 </td> </tr> <!-- CleanFormatter.java -->
+<tr> <td> <a href="CleanHandler.java"> CleanHandler.java </a> &nbsp; </td>  <!-- CleanHandler.java -->
+<td align=right> &nbsp; 3342 </td> <!-- CleanHandler.java -->
+<td align=right> &nbsp; 2006-08-19 15:04:19.813356000 -0600 </td> </tr> <!-- CleanHandler.java -->
+<tr> <td> <a href="CleanHandler.properties"> CleanHandler.properties </a> &nbsp; </td>  <!-- CleanHandler.properties -->
+<td align=right> &nbsp; 31 </td> <!-- CleanHandler.properties -->
+<td align=right> &nbsp; 2006-08-19 15:04:18.784407000 -0600 </td> </tr> <!-- CleanHandler.properties -->
+<tr> <td> <a href="CoordinateTransform.java"> CoordinateTransform.java </a> &nbsp; </td>  <!-- CoordinateTransform.java -->
+<td align=right> &nbsp; 6833 </td> <!-- CoordinateTransform.java -->
+<td align=right> &nbsp; 2006-08-19 15:04:19.943354000 -0600 </td> </tr> <!-- CoordinateTransform.java -->
+<tr> <td> <a href="GaussNewtonSolver.java"> GaussNewtonSolver.java </a> &nbsp; </td>  <!-- GaussNewtonSolver.java -->
+<td align=right> &nbsp; 11662 </td> <!-- GaussNewtonSolver.java -->
+<td align=right> &nbsp; 2006-08-19 15:04:32.195916000 -0600 </td> </tr> <!-- GaussNewtonSolver.java -->
+<tr> <td> <a href="GaussNewtonSolverTest.java"> GaussNewtonSolverTest.java </a> &nbsp; </td>  <!-- GaussNewtonSolverTest.java -->
+<td align=right> &nbsp; 9884 </td> <!-- GaussNewtonSolverTest.java -->
+<td align=right> &nbsp; 2006-08-19 15:04:20.209355000 -0600 </td> </tr> <!-- GaussNewtonSolverTest.java -->
+<tr> <td> <a href="IndexGrouper.java"> IndexGrouper.java </a> &nbsp; </td>  <!-- IndexGrouper.java -->
+<td align=right> &nbsp; 5940 </td> <!-- IndexGrouper.java -->
+<td align=right> &nbsp; 2006-08-19 15:04:20.347357000 -0600 </td> </tr> <!-- IndexGrouper.java -->
+<tr> <td> <a href="IndexSorter.java"> IndexSorter.java </a> &nbsp; </td>  <!-- IndexSorter.java -->
+<td align=right> &nbsp; 1782 </td> <!-- IndexSorter.java -->
+<td align=right> &nbsp; 2006-08-19 15:04:20.478315000 -0600 </td> </tr> <!-- IndexSorter.java -->
+<tr> <td> <a href="LICENSE"> LICENSE </a> &nbsp; </td>  <!-- LICENSE -->
+<td align=right> &nbsp; 1523 </td> <!-- LICENSE -->
+<td align=right> &nbsp; 2006-08-17 10:15:10.786881000 -0600 </td> </tr> <!-- LICENSE -->
+<tr> <td> <a href="LinearTransform.java"> LinearTransform.java </a> &nbsp; </td>  <!-- LinearTransform.java -->
+<td align=right> &nbsp; 1536 </td> <!-- LinearTransform.java -->
+<td align=right> &nbsp; 2006-08-19 15:04:20.604319000 -0600 </td> </tr> <!-- LinearTransform.java -->
+<tr> <td> <a href="LinearTransformWrapper.java"> LinearTransformWrapper.java </a> &nbsp; </td>  <!-- LinearTransformWrapper.java -->
+<td align=right> &nbsp; 1151 </td> <!-- LinearTransformWrapper.java -->
+<td align=right> &nbsp; 2006-08-19 15:04:20.729321000 -0600 </td> </tr> <!-- LinearTransformWrapper.java -->
+<tr> <td> <a href="Localize.java"> Localize.java </a> &nbsp; </td>  <!-- Localize.java -->
+<td align=right> &nbsp; 3041 </td> <!-- Localize.java -->
+<td align=right> &nbsp; 2006-08-19 15:04:20.859317000 -0600 </td> </tr> <!-- Localize.java -->
+<tr> <td> <a href="LoggerStream.java"> LoggerStream.java </a> &nbsp; </td>  <!-- LoggerStream.java -->
+<td align=right> &nbsp; 2524 </td> <!-- LoggerStream.java -->
+<td align=right> &nbsp; 2006-08-19 15:04:20.989318000 -0600 </td> </tr> <!-- LoggerStream.java -->
+<tr> <td> <a href="LogMonitor.java"> LogMonitor.java </a> &nbsp; </td>  <!-- LogMonitor.java -->
+<td align=right> &nbsp; 7383 </td> <!-- LogMonitor.java -->
+<td align=right> &nbsp; 2006-08-19 15:04:21.117318000 -0600 </td> </tr> <!-- LogMonitor.java -->
+<tr> <td> <a href="LogMonitor.properties"> LogMonitor.properties </a> &nbsp; </td>  <!-- LogMonitor.properties -->
+<td align=right> &nbsp; 124 </td> <!-- LogMonitor.properties -->
+<td align=right> &nbsp; 2006-08-19 15:04:18.731404000 -0600 </td> </tr> <!-- LogMonitor.properties -->
+<tr> <td> <a href="Monitor.java"> Monitor.java </a> &nbsp; </td>  <!-- Monitor.java -->
+<td align=right> &nbsp; 771 </td> <!-- Monitor.java -->
+<td align=right> &nbsp; 2006-08-19 15:04:21.251320000 -0600 </td> </tr> <!-- Monitor.java -->
+<tr> <td> <a href="PartialMonitor.java"> PartialMonitor.java </a> &nbsp; </td>  <!-- PartialMonitor.java -->
+<td align=right> &nbsp; 1075 </td> <!-- PartialMonitor.java -->
+<td align=right> &nbsp; 2006-08-19 15:04:21.391316000 -0600 </td> </tr> <!-- PartialMonitor.java -->
+<tr> <td> <a href="Quadratic.java"> Quadratic.java </a> &nbsp; </td>  <!-- Quadratic.java -->
+<td align=right> &nbsp; 937 </td> <!-- Quadratic.java -->
+<td align=right> &nbsp; 2006-08-19 15:04:21.520279000 -0600 </td> </tr> <!-- Quadratic.java -->
+<tr> <td> <a href="QuadraticSolver.java"> QuadraticSolver.java </a> &nbsp; </td>  <!-- QuadraticSolver.java -->
+<td align=right> &nbsp; 9008 </td> <!-- QuadraticSolver.java -->
+<td align=right> &nbsp; 2006-08-19 15:04:32.216905000 -0600 </td> </tr> <!-- QuadraticSolver.java -->
+<tr> <td> <a href="README"> README </a> &nbsp; </td>  <!-- README -->
+<td align=right> &nbsp; 941 </td> <!-- README -->
+<td align=right> &nbsp; 2006-06-04 11:56:41.669782000 -0600 </td> </tr> <!-- README -->
+<tr> <td> <a href="ScalarSolver.java"> ScalarSolver.java </a> &nbsp; </td>  <!-- ScalarSolver.java -->
+<td align=right> &nbsp; 18977 </td> <!-- ScalarSolver.java -->
+<td align=right> &nbsp; 2006-08-19 15:04:32.237908000 -0600 </td> </tr> <!-- ScalarSolver.java -->
+<tr> <td> <a href="src.tar.gz"> src.tar.gz </a> &nbsp; </td>  <!-- src.tar.gz -->
+<td align=right> &nbsp; 46449 </td> <!-- src.tar.gz -->
+<td align=right> &nbsp; 2006-08-19 15:04:32.546869000 -0600 </td> </tr> <!-- src.tar.gz -->
+<tr> <td> <a href="StringUtil.java"> StringUtil.java </a> &nbsp; </td>  <!-- StringUtil.java -->
+<td align=right> &nbsp; 26332 </td> <!-- StringUtil.java -->
+<td align=right> &nbsp; 2006-08-19 15:04:21.935284000 -0600 </td> </tr> <!-- StringUtil.java -->
+<tr> <td> <a href="StringUtil.properties"> StringUtil.properties </a> &nbsp; </td>  <!-- StringUtil.properties -->
+<td align=right> &nbsp; 102 </td> <!-- StringUtil.properties -->
+<td align=right> &nbsp; 2006-08-19 15:04:18.761406000 -0600 </td> </tr> <!-- StringUtil.properties -->
+<tr> <td> <a href="Transform.java"> Transform.java </a> &nbsp; </td>  <!-- Transform.java -->
+<td align=right> &nbsp; 2887 </td> <!-- Transform.java -->
+<td align=right> &nbsp; 2006-08-19 15:04:2293282000 -0600 </td> </tr> <!-- Transform.java -->
+<tr> <td> <a href="TransformQuadratic.java"> TransformQuadratic.java </a> &nbsp; </td>  <!-- TransformQuadratic.java -->
+<td align=right> &nbsp; 8904 </td> <!-- TransformQuadratic.java -->
+<td align=right> &nbsp; 2006-08-19 15:04:22.223277000 -0600 </td> </tr> <!-- TransformQuadratic.java -->
+<tr> <td> <a href="VectConst.java"> VectConst.java </a> &nbsp; </td>  <!-- VectConst.java -->
+<td align=right> &nbsp; 1083 </td> <!-- VectConst.java -->
+<td align=right> &nbsp; 2006-08-19 15:04:22.356284000 -0600 </td> </tr> <!-- VectConst.java -->
+<tr> <td> <a href="Vect.java"> Vect.java </a> &nbsp; </td>  <!-- Vect.java -->
+<td align=right> &nbsp; 3132 </td> <!-- Vect.java -->
+<td align=right> &nbsp; 2006-08-19 15:04:22.485239000 -0600 </td> </tr> <!-- Vect.java -->
+<tr> <td> <a href="VectUtil.java"> VectUtil.java </a> &nbsp; </td>  <!-- VectUtil.java -->
+<td align=right> &nbsp; 6569 </td> <!-- VectUtil.java -->
+<td align=right> &nbsp; 2006-08-19 15:04:22.614246000 -0600 </td> </tr> <!-- VectUtil.java -->
+</table>
+<hr>
+Directories:<br>
+<a href="documentation/"> documentation </a><br>
+<p><hr> Return to <a href="../"> parent directory.</a>
+
+</body> </html>
