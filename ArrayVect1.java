@@ -132,7 +132,7 @@ public String toString() {
     // test inverse covariance
     for (int i=0; i<a.length; ++i) {a[i] = 1;}
     v = new ArrayVect1(a, 3.);
-    Vect w = (ArrayVect1) v.clone();
+    Vect w = v.clone();
     w.multiplyInverseCovariance();
     assert Almost.FLOAT.equal(1./3., v.dot(w));
     assert Almost.FLOAT.equal(1./3., v.magnitude());

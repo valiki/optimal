@@ -24,7 +24,10 @@ public class StringUtil {
   private static final Logger LOG
     = Logger.getLogger(StringUtil.class.getName() ,StringUtil.class.getName());
 
-  private static final String NL = System.getProperty("line.separator");
+  /**
+   * Line separator
+   */
+  public static final String NL = System.getProperty("line.separator");
 
   /** The format used by getTimeStamp() methods,
       like 20050621-153318 */
@@ -106,6 +109,52 @@ public class StringUtil {
     }
 
     /**
+     * Returns the number of rows in this table.
+     * @return the number of rows in this table.
+     */
+    public int size() {
+      return _rows.size();
+    }
+
+    /**
+     * Removes the row at the specified position from the table.
+     * @param index the index of the row to remove.
+     * @throws IndexOutOfBoundsException if index out of range
+     *         (<code>index < 0 || index >= size()</code>).
+     */
+    public void removeRow(int index) {
+      _rows.remove(index);
+    }
+
+    /**
+     * Condenses the table to specified maximum number of lines.
+     * If the table contains more lines than the maximum, lines
+     * will be removed at regular intervals.
+     * @param max maximum number of lines in the table
+     */
+    public void condense(int max) {
+      if (max<0)
+        throw new IllegalArgumentException("max size is "+max+"  Must be >0");
+
+      int size = size();
+      if (size<=max)
+        return;
+
+      int stride = (size+max-1)/max;
+      assert stride>1 : "stride="+stride+"  size="+size+"  max="+max;
+      for (int index=size-1; index>=0; index-=stride) {
+        for (int i=0; i<stride-1 && size()>max; ++i) {
+          removeRow(index-i);
+        }
+      }
+
+      assert size()==max :
+        "size="+size+"  max="+max+"  new size="+size()+"  stride="+stride+
+        "\n"+toString();
+       return;
+    }
+
+    /**
      * Return a nicely formatted table of values.
      * The table is returned as a string formatted by the joinTable method.
      * @return A formatted string.
@@ -147,7 +196,7 @@ public class StringUtil {
   }
 
   /**
-   * Combine a 2D array of strings into a single alligned table.
+   * Combine a 2D array of strings into a single aligned table.
    * Fast dimension will be vertical.
    * @param table Elements to be in table.
    * @return table as a printable string.
@@ -771,6 +820,20 @@ public class StringUtil {
 "   2147483647  2147483648      true             4            5         6"+NL+
 "         null        null      null          null         null      null";
       assert expectedResult.equals(tb.toString());
+    }
+
+    {
+      // Test the TableBuilder.condense method.
+      for (int n=1; n<=500; ++n) {
+        for (int nmax=1; nmax<n && nmax<101; ++nmax) {
+          TableBuilder tb = new TableBuilder();
+          for (int i=0; i<n; ++i) {
+            tb.addRow("Row "+i);
+          }
+          tb.condense(nmax);
+          assert tb.size()==nmax : "n="+n+"  nmax="+nmax+"  Size is "+tb.size();
+        }
+      }
     }
   }
 }
