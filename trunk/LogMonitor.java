@@ -188,7 +188,7 @@ public class LogMonitor implements Monitor {
   private class UpdateTimeThread extends Thread {
     /** Constructor. */
     public UpdateTimeThread() {
-      super ("UpdateTimeThread "+StringUtil.getLongTimeStamp());
+      super ("LogMonitor.UpdateTimeThread "+StringUtil.getLongTimeStamp());
     }
     @Override public void run() {
       try {
